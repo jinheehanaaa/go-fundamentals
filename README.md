@@ -25,9 +25,9 @@
 - Global Run Queue (GRQ)
 
 **[Questions to ask]**
-Q: 
-- Why use decoupling?
-A: 
+Q: <br class="">
+Why use decoupling?
+A: <br class=""> 
 - Decoupling separates concrete data & behavior
 - We can define same behaviors for each data
 - Each data with the same interface will have the common behavior

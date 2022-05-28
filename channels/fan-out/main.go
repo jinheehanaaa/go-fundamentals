@@ -1,8 +1,10 @@
-/* NOTE:
-- Unbuffered Channel => Gaurantee that "recv" comes first before "send"
-- Fan-Out Pattern for CLI Tool, Cron Job
-- Multiple send might hurt the system
-- Need to be careful if you want to use this pattern for web
+/* NOTE
+- Buffered Channel = Send can be completed without "recv" => Reduce the latency between "send" & "recv"
+- Buffered Channel => Synchronization Problem, same goroutine could try to read the same line
+- So we still see latency on send side due to the fact that multiple sends are happening at the same time
+- Good for CLI Tool, Cron Job, lambda function
+- Need to be careful if you want to use this pattern for web service
+- Multiple send might put alot of load on the system very quickly
 - Goroutines are running in parallel & concurrently (out-of-order execution)
 */
 
@@ -24,30 +26,13 @@ func main() {
 	fanOut()
 }
 
-// waitForResult: In this pattern, the parent goroutine waits for the child
-// goroutine to finish some work to signal the result.
-func waitForResult() {
-	ch := make(chan string) // Unbuffered Channel
-
-	go func() {
-		time.Sleep(time.Duration(rand.Intn(500)) * time.Millisecond)
-		ch <- "data"
-		fmt.Println("child : sent signal")
-	}()
-
-	d := <-ch
-	fmt.Println("parent : recv'd signal :", d)
-
-	time.Sleep(time.Second)
-	fmt.Println("-------------------------------------------------")
-}
-
 // fanOut: In this pattern, the parent goroutine creates 2000 child goroutines
 // and waits for them to signal their results.
 func fanOut() {
 	children := 2000
-	ch := make(chan string, children)
+	ch := make(chan string, children) // Buffered Channel, Signal with String Data
 
+	// Send
 	for c := 0; c < children; c++ {
 		go func(child int) {
 			time.Sleep(time.Duration(rand.Intn(200)) * time.Millisecond)
@@ -56,6 +41,7 @@ func fanOut() {
 		}(c)
 	}
 
+	// Recv
 	for children > 0 {
 		d := <-ch
 		children--
